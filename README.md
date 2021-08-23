@@ -1,4 +1,4 @@
-# FDA Demos for webSocket API
+# FDA Demos for WebSocket API
 * [WebSocketAPI Demos](./WebSocketAPI-CodeExamples)
 
 
