@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Forge Design Automation WebSocket Demo</title>
+  <script>
+    // #region parse query strings
+    // The 3-legged forge token will be passed as query string to this page after login.
+    var params = {},
+       queryString = location.hash.substring(1),
+       regex = /([^&=]+)=([^&]*)/g,
+       m;
+    while (m = regex.exec(queryString)) {
+     params[m[1]] = m[2];
+    }
+    //#endregion
+
+    //check to see if we are here before or after login. 
+    if (!params.access_token) {
+      login();
+    }
+
+    //get .env file and retrieve clientID and callbackURL. This is for
+    //convenience only. You don't want to do this in a production application
+    //because .env also contains the client secret!
+    async function fetchEnv()
+    {
+      const resp = await fetch("/.env");
+      const env = await resp.text();
+      const clientId = /FORGE_CLIENT_ID=([^\n\r]*)/.exec(env)[1];
+      const callbackURL = /FORGE_CALLBACKURL=([^\n\r]*)/.exec(env)[1];
+      return {
+        clientId: encodeURIComponent(clientId),
+        callbackURL: encodeURIComponent(callbackURL)
+      }
+    }
+
+    // login by redirecting to Autodesk Forge authentication endpoint which will redirect back to
+    // callbackURL after login.
+    async function login()
+    {
+      const authURL = "https://developer.api.autodesk.com/authentication/v1/authorize";
+      const scope = encodeURIComponent("code:all");
+      const env = await fetchEnv();
+      window.location.replace(`${authURL}?response_type=token&client_id=${env.clientId}&redirect_uri=${env.callbackURL}&scope=${scope}`);
+    }
+
+    //find and return the multiline input field in our HTML
+    function getInputArea()
+    {
+      return document.getElementById('form').getElementsByTagName("textarea")[0];
+    }
+
+    //connect websocket
+    async function connect(onmessage)
+    {
+      return new Promise((resolve, reject) => {
+        const ws = new WebSocket("wss://websockets.forgedesignautomation.io");
+        ws.onmessage = onmessage;
+        ws.onopen = e => resolve(ws)
+        ws.onerror = e => reject(e.data)
+      });
+    }
+
+    // wrap workitem in a websocket message.
+    // Note: 
+    // We pass the access_token as part of the message because
+    // the connect request has no way to specify headers in a browser.
+    function generateMessage(workitem)
+    {
+        const message = {
+          action : "post-workitem",
+          headers : { 
+            Authorization: `${params.token_type} ${params.access_token}`
+          },
+          data: JSON.parse(workitem)
+        }
+        return JSON.stringify(message);
+    }
+
+    // print incoming and outgoing messages
+    function printMessage(msg, incoming)
+    {
+      const messages = document.getElementById("messages");
+      const mark = incoming?"←":"→";
+      messages.innerText+=`${mark} ${msg}\n`
+    }
+    let ws; //websocket client that we retain between button clicks
+
+    // handle Submit button click
+    async function onSubmitHandler()
+    {
+      const exceptions = document.getElementById("exceptions");
+      exceptions.innerText="";
+      try {
+        //get workitem content
+        const workitem = getInputArea().value;
+        //generate a message from it
+        const msg = generateMessage(workitem);
+        if (!ws) {
+          // connect to websocket and hook up a printing message handler
+          ws = await connect(e => { printMessage(e.data, true);});
+          // if the connection is closed (e.g. due to timeout) then make sure we re-init next time
+          ws.onclose = (e) => ws = undefined;
+        }
+        //send websocket message
+        ws.send(msg);
+        //print outgoing message
+        printMessage(msg, false);
+      } 
+      catch (e)
+      {
+        exceptions.innerText= `${e}\n`;
+      }
+    }
+  </script>
+</head>
+<body>
+  <p>This is a simple Forge Design Automation websocket client.</p>
+  <form id="form">
+    <textarea id="workitem" rows="10" cols="30" placeholder="Type workitem json here..."></textarea>
+    <br/>
+    <input type="button" value="Submit" onclick="onSubmitHandler()"/>
+  </form>
+  <p>Messages:
+    <div id="messages"></div>
+  </p>
+  <p>Exceptions:
+    <div id="exceptions"></div>
+  </p>
+</body>
+</html>

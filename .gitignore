@@ -1,0 +1,11 @@
+#.vs directoy is used by Visual Studio
+.vs/
+obj/
+bin/
+packages/
+Output/
+**/node_modules
+WebSocketAPI-CodeExamples/service/secret.json
+WebSocketAPI-CodeExamples/service/public.json
+WebSocketAPI-CodeExamples/.env
+**/appsettings.user.json

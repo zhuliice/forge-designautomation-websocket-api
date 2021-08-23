@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Upload Public Key",
+            "program": "${workspaceFolder}/service/forgeapp.js",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "pwa-node"
+        },
+        {
+            "type": "pwa-msedge",
+            "request": "launch",
+            "name": "Browser Demo",
+            "url": "http://localhost:3000/browser/demo.html"
+        }
+    ]
+}
