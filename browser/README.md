@@ -13,7 +13,7 @@ The sample displays a text box and a button. When you press the button the sampl
 ## Running the sample
 
 1. Open VSCode.
-2. Choose `File/Open Folder...` menu and the `WebSocketAPI-CodeExamples` folder.
+2. Choose `File/Open Folder...` menu and the select the folder where you copied this repo.
 3. Choose `View/Command Palette...` menu and run `Live Preview: Start Server` command.
 3. Choose `Run/Run Without Debugging...` menu and choose the `Browser Demo` configuration.
 
